@@ -5,9 +5,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMax;
+import frc.robot.subsystem.driving.Drive;
+import frc.robot.subsystem.driving.TankDrive;
 
 /**
  * The VM is configured to automatically run this class, and to call the methods corresponding to
@@ -16,14 +19,17 @@ import com.revrobotics.CANSparkMaxLowLevel;
  * project.
  */
 public class Robot extends TimedRobot {
-    CANSparkMax spark = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
+    private static final CANSparkMaxLowLevel.MotorType K_MOTORTYPE = CANSparkMaxLowLevel.MotorType.kBrushless;
+
+    private Drive drive;
     /**
      * This method is run when the robot is first started up and should be used for any
      * initialization code.
      */
     @Override
     public void robotInit() {
-
+        SpeedController leftFront = new CANSparkMax(1, K_MOTORTYPE);
+        drive = new TankDrive(leftFront, leftFront, leftFront, leftFront);
     }
 
     /**
