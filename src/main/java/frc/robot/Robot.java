@@ -6,6 +6,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
 
 /**
  * The VM is configured to automatically run this class, and to call the methods corresponding to
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
  * project.
  */
 public class Robot extends TimedRobot {
+    CANSparkMax spark = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     /**
      * This method is run when the robot is first started up and should be used for any
      * initialization code.
@@ -36,7 +39,7 @@ public class Robot extends TimedRobot {
     /**
      * This autonomous (along with the chooser code above) shows how to select between different
      * autonomous modes using the dashboard. The sendable chooser code works with the Java
-     * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of the chooser code and
+     * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all the chooser code and
      * uncomment the getString line to get the auto name from the text box below the Gyro.
      * <p>
      * You can add additional auto modes by adding additional comparisons to the switch structure
