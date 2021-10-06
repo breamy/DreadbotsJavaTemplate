@@ -5,6 +5,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -15,8 +16,11 @@ import frc.robot.subsystem.Intake;
 import frc.robot.subsystem.driving.Drive;
 import frc.robot.subsystem.driving.DriveMode;
 import frc.robot.subsystem.driving.TankDrive;
+import frc.robot.subsystem.shooting.Shooter;
 import frc.robot.utility.Constants;
 import frc.robot.utility.DreadbotController;
+
+import static frc.robot.utility.Constants.FLY_WHEEL_MOTOR_ID;
 
 /**
  * The VM is configured to automatically run this class, and to call the methods corresponding to
@@ -32,6 +36,7 @@ public class Robot extends TimedRobot {
     private Drive drive;
     private Intake intake;
     private Climber climber;
+    private Shooter shooter;
     /**
      * This method is run when the robot is first started up and should be used for any
      * initialization code.
@@ -55,6 +60,14 @@ public class Robot extends TimedRobot {
         // Climber
         CANSparkMax climbMotor = new CANSparkMax(10, CANSparkMaxLowLevel.MotorType.kBrushless);
         climber = new Climber(climbMotor, new Solenoid(Constants.CLIMB_TELESCOPE));
+
+        // Shooter
+        CANSparkMax flywheelMotor = new CANSparkMax(Constants.FLY_WHEEL_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        CANSparkMax hoodMotor = new CANSparkMax(Constants.AIM_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        DigitalInput upperSwitch = new DigitalInput(1);
+        DigitalInput lowerSwitch = new DigitalInput(2);
+        shooter = new Shooter(flywheelMotor, hoodMotor, upperSwitch, lowerSwitch);
+        shooter.startCalibraation();
     }
 
     /**
@@ -66,43 +79,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
-    }
-
-    protected DriveMode getDriveMode() {
-        if (primaryJoystick.isRightTriggerPressed()) {
-            return DriveMode.TURBO;
-        } else if (primaryJoystick.isRightBumperPressed()) {
-            return DriveMode.TURTLE;
-        } else {
-            return DriveMode.NORMAL;
-        }
-    }
-
-    protected void handleIntake() {
-        if (secondaryJoystick.isXButtonPressed()) {
-            intake.start();
-        } else if (secondaryJoystick.isAButtonPressed()) {
-            intake.reverse();
-        } else {
-            intake.stop();
-        }
-    }
-
-    protected void handleClimb() {
-        if (secondaryJoystick.isStartButtonPressed()) {
-            climber.extendTelescope(true);
-        } else if (secondaryJoystick.isBackButtonPressed()) {
-            climber.extendTelescope(false);
-        }
-
-        if (secondaryJoystick.isRightTriggerPressed()) {
-            climber.runWinchUp();
-        } else if (secondaryJoystick.isLeftTriggerPressed()) {
-            climber.runWinchDown();
-        } else {
-            climber.stopWinch();
-        }
+        shooter.calibrate();
     }
 
     @Override
@@ -128,6 +105,46 @@ public class Robot extends TimedRobot {
         drive.drive(primaryJoystick.getYAxis(), primaryJoystick.getZAxis(), getDriveMode());
         handleIntake();
         handleClimb();
+    }
+
+    /* Reads which buttons are pushed and returns the appropriaate DriveMode */
+    protected DriveMode getDriveMode() {
+        if (primaryJoystick.isRightTriggerPressed()) {
+            return DriveMode.TURBO;
+        } else if (primaryJoystick.isRightBumperPressed()) {
+            return DriveMode.TURTLE;
+        } else {
+            return DriveMode.NORMAL;
+        }
+    }
+
+    /* reads the X and A buttons and starts, stops, or reverses the intake motor */
+    protected void handleIntake() {
+        if (secondaryJoystick.isXButtonPressed()) {
+            intake.start();
+        } else if (secondaryJoystick.isAButtonPressed()) {
+            intake.reverse();
+        } else {
+            intake.stop();
+        }
+    }
+
+    /* extends or collapses the climb arm
+       and runs the winch to climb (or lower) */
+    protected void handleClimb() {
+        if (secondaryJoystick.isStartButtonPressed()) {
+            climber.extendTelescope(true);
+        } else if (secondaryJoystick.isBackButtonPressed()) {
+            climber.extendTelescope(false);
+        }
+
+        if (secondaryJoystick.isRightTriggerPressed()) {
+            climber.runWinchUp();
+        } else if (secondaryJoystick.isLeftTriggerPressed()) {
+            climber.runWinchDown();
+        } else {
+            climber.stopWinch();
+        }
     }
 
     /** This function is called once when the robot is disabled. */
