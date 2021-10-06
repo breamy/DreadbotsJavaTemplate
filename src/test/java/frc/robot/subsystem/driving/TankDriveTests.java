@@ -2,8 +2,6 @@ package frc.robot.subsystem.driving;
 
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.SpeedController;
-import frc.robot.subsystem.driving.Drive;
-import frc.robot.subsystem.driving.TankDrive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -55,17 +53,42 @@ public class TankDriveTests {
         verify(rightRear).set(1.0);
 
         Mockito.reset(leftFront, rightFront, leftRear, rightRear);
-        tankDrive.drive(1, 0);
+        tankDrive.drive(1.0, 0.0);
         verify(leftFront).set(-0.5);
         verify(rightFront).set(0.5);
         verify(leftRear).set(-0.5);
         verify(rightRear).set(0.5);
 
         Mockito.reset(leftFront, rightFront, leftRear, rightRear);
-        tankDrive.drive(.5, -.5);
+        tankDrive.drive(0.5, -0.5);
         verify(leftFront).set(-0.5);
         verify(rightFront).set(0.0);
         verify(leftRear).set(-0.5);
         verify(rightRear).set(0.0);
+    }
+    @Test
+    public void testDriveDeadzone() {
+        Drive tankDrive = new TankDrive(leftFront, rightFront, leftRear, rightRear);
+        Mockito.reset(leftFront, rightFront, leftRear, rightRear);
+
+        tankDrive.drive(.19, .19);
+        verify(leftFront).set(0.0);
+        verify(rightFront).set(0.0);
+        verify(leftRear).set(0.0);
+        verify(rightRear).set(0.0);
+
+        Mockito.reset(leftFront, rightFront, leftRear, rightRear);
+        tankDrive.drive(.2, .2);
+        verify(leftFront).set(0.0);
+        verify(rightFront).set(0.2);
+        verify(leftRear).set(0.0);
+        verify(rightRear).set(0.2);
+
+        Mockito.reset(leftFront, rightFront, leftRear, rightRear);
+        tankDrive.drive(.22, .21);
+        verify(leftFront).set(-0.0050000000000000044);
+        verify(rightFront).set(0.215);
+        verify(leftRear).set(-0.0050000000000000044);
+        verify(rightRear).set(0.215);
     }
 }

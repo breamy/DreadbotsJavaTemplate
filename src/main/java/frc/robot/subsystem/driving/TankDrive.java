@@ -14,15 +14,15 @@ public class TankDrive extends SubsystemBase implements Drive {
 	private final SpeedController rightRearMotor;
 	private final ArrayList<SpeedController> allMotors;
 
-	private final double DEAD_ZONE = 0.2;
+	private final double DEAD_ZONE = 0.2d;
 
 	public TankDrive(SpeedController leftFront, SpeedController rightFront,
 					 SpeedController leftRear, SpeedController rightRear) {
 		super("SparkDrive");
 
 		leftFrontMotor = leftFront;
-		leftRearMotor = leftRear;
 		rightFrontMotor = rightFront;
+		leftRearMotor = leftRear;
 		rightRearMotor = rightRear;
 		allMotors = new ArrayList<>();
 		allMotors.add(leftFront);
@@ -113,14 +113,14 @@ public class TankDrive extends SubsystemBase implements Drive {
 		// Apply an Optional Joystick Deadband
 		forwardAxisFactor = DreadbotMath.applyDeadbandToValue(forwardAxisFactor, -joystickDeadband, joystickDeadband, 0.0d);
 		rotationAxisFactor = DreadbotMath.applyDeadbandToValue(rotationAxisFactor, -joystickDeadband, joystickDeadband, 0.0d);
-
+		System.out.println("Deadband-  forwardAxisFactor: " + forwardAxisFactor + " rotationAxisFactor: " + rotationAxisFactor);
 		// Essential Drive Math based on the two movement factors.
 		double leftFinalSpeed = (-forwardAxisFactor + rotationAxisFactor) * driveMode.finalValueMultiplier;
 		double rightFinalSpeed = (forwardAxisFactor + rotationAxisFactor) * driveMode.finalValueMultiplier;
 
 		// Normalize the values to become between 1.0 and -1.0.
 		double normalizeDivisor = DreadbotMath.getNormalizationDivisor(leftFinalSpeed, rightFinalSpeed);
-
+		System.out.println("normalizeDivisor: " + normalizeDivisor);
 		leftFinalSpeed = leftFinalSpeed / normalizeDivisor;
 		rightFinalSpeed = rightFinalSpeed / normalizeDivisor;
 		System.out.println("FinalSpeed Left: " + leftFinalSpeed + " Right: " + rightFinalSpeed);

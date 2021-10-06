@@ -5,12 +5,18 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMax;
+import frc.robot.subsystem.Climber;
+import frc.robot.subsystem.Intake;
 import frc.robot.subsystem.driving.Drive;
+import frc.robot.subsystem.driving.DriveMode;
 import frc.robot.subsystem.driving.TankDrive;
+import frc.robot.utility.Constants;
+import frc.robot.utility.DreadbotController;
 
 /**
  * The VM is configured to automatically run this class, and to call the methods corresponding to
@@ -21,15 +27,34 @@ import frc.robot.subsystem.driving.TankDrive;
 public class Robot extends TimedRobot {
     private static final CANSparkMaxLowLevel.MotorType K_MOTORTYPE = CANSparkMaxLowLevel.MotorType.kBrushless;
 
+    private DreadbotController primaryJoystick;
+    private DreadbotController secondaryJoystick;
     private Drive drive;
+    private Intake intake;
+    private Climber climber;
     /**
      * This method is run when the robot is first started up and should be used for any
      * initialization code.
      */
     @Override
     public void robotInit() {
+        primaryJoystick = new DreadbotController(0);
+        secondaryJoystick = new DreadbotController(1);
+
+        // Drivetrain
         SpeedController leftFront = new CANSparkMax(1, K_MOTORTYPE);
-        drive = new TankDrive(leftFront, leftFront, leftFront, leftFront);
+        SpeedController rightFront = new CANSparkMax(2, K_MOTORTYPE);
+        SpeedController leftRear = new CANSparkMax(3, K_MOTORTYPE);
+        SpeedController rightRear = new CANSparkMax(4, K_MOTORTYPE);
+        drive = new TankDrive(leftFront, rightFront, leftRear, rightRear);
+
+        // Intake
+        CANSparkMax intakeMotor = new CANSparkMax(Constants.INTAKE_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        intake = new Intake(intakeMotor, new Solenoid(Constants.INTAKE_PIN_ID));
+
+        // Climber
+        CANSparkMax climbMotor = new CANSparkMax(10, CANSparkMaxLowLevel.MotorType.kBrushless);
+        climber = new Climber(climbMotor, new Solenoid(Constants.CLIMB_TELESCOPE));
     }
 
     /**
@@ -40,24 +65,52 @@ public class Robot extends TimedRobot {
      * SmartDashboard integrated updating.
      */
     @Override
-    public void robotPeriodic() {}
+    public void robotPeriodic() {
 
-    /**
-     * This autonomous (along with the chooser code above) shows how to select between different
-     * autonomous modes using the dashboard. The sendable chooser code works with the Java
-     * SmartDashboard. If you prefer the LabVIEW Dashboard, remove all the chooser code and
-     * uncomment the getString line to get the auto name from the text box below the Gyro.
-     * <p>
-     * You can add additional auto modes by adding additional comparisons to the switch structure
-     * below with additional strings. If using the SendableChooser make sure to add them to the
-     * chooser code above as well.
-     */
+    }
+
+    protected DriveMode getDriveMode() {
+        if (primaryJoystick.isRightTriggerPressed()) {
+            return DriveMode.TURBO;
+        } else if (primaryJoystick.isRightBumperPressed()) {
+            return DriveMode.TURTLE;
+        } else {
+            return DriveMode.NORMAL;
+        }
+    }
+
+    protected void handleIntake() {
+        if (secondaryJoystick.isXButtonPressed()) {
+            intake.start();
+        } else if (secondaryJoystick.isAButtonPressed()) {
+            intake.reverse();
+        } else {
+            intake.stop();
+        }
+    }
+
+    protected void handleClimb() {
+        if (secondaryJoystick.isStartButtonPressed()) {
+            climber.extendTelescope(true);
+        } else if (secondaryJoystick.isBackButtonPressed()) {
+            climber.extendTelescope(false);
+        }
+
+        if (secondaryJoystick.isRightTriggerPressed()) {
+            climber.runWinchUp();
+        } else if (secondaryJoystick.isLeftTriggerPressed()) {
+            climber.runWinchDown();
+        } else {
+            climber.stopWinch();
+        }
+    }
+
     @Override
     public void autonomousInit() {
 
     }
 
-    /** This method is called periodically during autonomous. */
+    /** This method is called periodically during autonomous. Approx 50 times per second */
     @Override
     public void autonomousPeriodic() {
 
@@ -65,11 +118,17 @@ public class Robot extends TimedRobot {
 
     /** This function is called once when teleop is enabled. */
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        intake.deployIntake();
+    }
 
     /** This method is called periodically during operator control. */
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+        drive.drive(primaryJoystick.getYAxis(), primaryJoystick.getZAxis(), getDriveMode());
+        handleIntake();
+        handleClimb();
+    }
 
     /** This function is called once when the robot is disabled. */
     @Override
@@ -86,4 +145,17 @@ public class Robot extends TimedRobot {
     /** This method is called periodically during test mode. */
     @Override
     public void testPeriodic() {}
+
+    /*
+      Methods to inject dependencies for unit tests
+     */
+    public void setPrimaryJoystick(DreadbotController controller) {
+        this.primaryJoystick = controller;
+    }
+    public void setSecondaryJoystick(DreadbotController controller) {
+        this.secondaryJoystick = controller;
+    }
+    public void setDrive(Drive drive) {
+        this.drive = drive;
+    }
 }
